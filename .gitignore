@@ -55,3 +55,5 @@ wheels/
 *.egg
 
 EEGDataPrep/__pycache__
+EEGDataPrep/dataprep/__pycache__
+EEGDataPrep/front/__pycache__

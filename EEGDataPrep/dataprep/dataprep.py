@@ -1,5 +1,6 @@
 import os
 import mne
+from mne.preprocessing import ICA
 
 
 def plot_raw(file):
@@ -8,6 +9,12 @@ def plot_raw(file):
     bandpass_filter(raw)
     raw.plot(duration=4)
     return raw
+
+
+def plot_processed_file(file):
+    data = mne.read_epochs(file, preload=True)
+    data.plot(duration=4)
+    return data
 
 
 # Step One functions
@@ -37,3 +44,42 @@ def rereference(raw):
     # Using Cz as reference, it has bad signaling due to its location
     raw.set_eeg_reference(ref_channels=['Cz'])
 
+
+def step2(raw, file):
+    inspect_bads(raw)
+    ica_analysis(raw)
+    epochs = epoching(raw, True)
+    print("---------------------------------")
+    print("Pick bad epochs")
+    epochs.plot()
+    return epochs
+
+
+def inspect_bads(raw):
+    print("---------------------------------")
+    if len(raw.info['bads']) > 0:
+        raw.pick(picks='eeg', exclude="bads")
+        print("Removed bad channels picked in step one")
+    else:
+        print("No bad channels picked")
+
+
+def epoching(raw, reject):
+    events = mne.make_fixed_length_events(raw, start=5, duration=2.5)
+    if reject:
+        reject_criteria = dict(eeg=150e-6)  # 250 µV
+        return mne.Epochs(raw, events, reject=reject_criteria, tmin=-0.2, tmax=0.5, preload=True)
+    else:
+        return mne.Epochs(raw, events, tmin=-0.2, tmax=0.5, preload=True)
+
+
+def ica_analysis(raw):
+    ica = ICA(method='fastica', max_iter='auto')
+    ica.fit(raw)
+    return ica.apply(raw)
+
+
+def save_processed_epochs(epochs, file):
+    processed_file_name = f"Processed - {file.rsplit('/', 1)[-1].split('.')[0]}-epo.fif"
+    epochs.save(fname=processed_file_name, overwrite=True)
+    os.rename(processed_file_name, f"../data/preprocessed/{processed_file_name}")

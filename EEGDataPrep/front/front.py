@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter.filedialog import askopenfilename
+from tkinter import messagebox
 from EEGDataPrep.dataprep.dataprep import *
 
 
@@ -22,12 +23,16 @@ class MyWindow:
         # Buttons
         self.btnOpenFile = Button(win, text='Load File', command=self.select_file)
         self.btnRawPlot = Button(win, text='Plot Raw', command=self.create_plot)
+        self.btnProcessedPlot = Button(win, text='Plot Processed', command=self.plot_processed)
         self.btnStep1 = Button(win, text='Step one', command=self.first_step)
         self.btnStep2 = Button(win, text='Step two', command=self.second_step)
+        self.btnStep3 = Button(win, text='Save Epochs', command=self.save_epochs)
         # EEG file loaded by user
         # ---------------------------
         self.selectedFile = "No file loaded"
         self.midProcess = mne.create_info(4, sfreq=40)
+        self.processed_epochs = mne.create_info(4, sfreq=40)
+        self.savedFileName = "Untitled"
         # Placing the objects
         # ---------------------------
         # Labels
@@ -41,8 +46,10 @@ class MyWindow:
         # Buttons
         self.btnOpenFile.place(x=170, y=90)
         self.btnRawPlot.place(x=20, y=180)
+        self.btnProcessedPlot.place(x=20, y=220)
         self.btnStep1.place(x=240, y=180)
         self.btnStep2.place(x=240, y=220)
+        self.btnStep3.place(x=240, y=280)
 
     # Triggered when Load File is pressed
     def select_file(self):
@@ -73,13 +80,32 @@ class MyWindow:
             ('Elekta NeuroMag data files', '*.fif')
         )
         self.selectedFile = askopenfilename(filetypes=filetypes, title='Open a file')
+        if not self.selectedFile:
+            # Error catcher
+            messagebox.showerror("Bad File Loaded", "Bad File. Load Again")
+        if self.selectedFile:
+            # Printing to console that the file is successfully loaded to the software
+            print("---------------------------------")
+            print(f"{self.selectedFile.rsplit('/', 1)[-1].split('.')[0]}", "selected successfully, click "
+                                                                           "Step One to proceed with processing")
+            print(self.selectedFile)
 
     # Triggered when Plot Raw is pressed
     def create_plot(self):
         plot_raw(self.selectedFile)
 
+        # Plot an already-processed file
+    def plot_processed(self):
+        plot_processed_file(self.selectedFile)
+
     def first_step(self):
         self.midProcess = step1(self.selectedFile)
 
     def second_step(self):
-        print('here we will have second step')
+        self.midProcess = step2(self.midProcess, self.selectedFile)
+
+    def save_epochs(self):
+        save_processed_epochs(self.midProcess, self.selectedFile)
+        print("---------------------------------")
+        print("Your preprocessed file is new in data/preprocessed folder.")
+
