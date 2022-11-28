@@ -3,11 +3,11 @@ import mne
 from mne.preprocessing import ICA
 
 
-def plot_raw(file):
-    raw = mne.io.read_raw(file, preload=True)
-    raw.pick(['Pz', 'Cz', 'Fz', 'C3', 'C4'])
+def plot_raw(file):  # presenting the raw data file
+    raw = mne.io.read_raw(file, preload=True)  # uploading an EEG file
+    raw.pick(['Pz', 'Cz', 'Fz', 'C3', 'C4'])  # choosing main channels
     bandpass_filter(raw)
-    raw.plot(duration=4)
+    raw.plot(duration=4)  # setting the sampling time
     return raw
 
 
@@ -36,7 +36,7 @@ def bandpass_filter(raw):
     # Filtering to low-pass and high-pass, picking specific electrodes
     raw.filter(l_freq=1, h_freq=40)
     raw.resample(sfreq=250)
-    freqs = (60, 120, 180, 240)
+    freqs = (60, 120, 180, 240)  # setting the frequencies to filter
     raw.notch_filter(freqs=freqs, picks='eeg', method='spectrum_fit', filter_length='4s')
 
 
@@ -46,6 +46,7 @@ def rereference(raw):
 
 
 def step2(raw, file):
+    # Removing bad channels and marking bad segments
     inspect_bads(raw)
     ica_analysis(raw)
     epochs = epoching(raw, True)
@@ -65,6 +66,7 @@ def inspect_bads(raw):
 
 
 def epoching(raw, reject):
+    # filtering bad segments
     events = mne.make_fixed_length_events(raw, start=5, duration=2.5)
     if reject:
         reject_criteria = dict(eeg=150e-6)  # 250 µV

@@ -1,7 +1,7 @@
 from front.front import MyWindow
 from tkinter import *
 
-
+# The runner creates a gui window, by using TK library
 print("Type down the number of machine windows to open. When finished, press Enter")
 numberOfWindows = int(input())
 for i in range(numberOfWindows):
